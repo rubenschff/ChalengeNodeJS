@@ -1,0 +1,27 @@
+{
+  "name": "chalengenodejs",
+  "version": "1.0.0",
+  "description": "Building an RestFul API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/rubenschff/ChalengeNodeJS.git"
+  },
+  "author": "Rubens Christoff <rubenschristoff@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://gitlab.com/rubenschff/ChalengeNodeJS/issues"
+  },
+  "homepage": "https://gitlab.com/rubenschff/ChalengeNodeJS#readme",
+  "type": "module",
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  },
+  "dependencies": {
+    "@hapi/hapi": "^20.2.1"
+  }
+}

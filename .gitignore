@@ -1,2 +1,6 @@
 
 db/postgres.js
+
+db/migrations/migrations/20220425223824_crate_user.js
+
+db/knexfile.js

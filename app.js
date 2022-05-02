@@ -29,10 +29,7 @@ app.route({
                 console.log(err)
             })
 
-            /*reply.response({
-                "name": payload.name,
-                "surname": payload.surname,
-            }).code(200)*/
+           return payload
         },
         //validation with Joi
         options: {
@@ -58,10 +55,11 @@ app.route(
             db('todos').insert({
                 state: payload.state,
                 description: payload.description
-            }).catch((err) =>{
+            }).catch(err =>{
                 console.log(err)
             })
 
+            return payload
 
         },
         //validation with Joi
@@ -71,13 +69,12 @@ app.route(
                     state: Joi.string().default('INCOMPLETE') ,
                     description: Joi.string().required(),
                 })
-            },
-            response:{
-                
             }
         }
     }
 )
+
+
 
 //route todos get
 app.route(
@@ -85,10 +82,76 @@ app.route(
         method: 'GET',
         path: '/todos',
         handler: (request,h) =>{
+            const query = request.query
             
+
+            if (query.filter == 'ALL'){
+                if (query.orderBy=='DESCRIPTION'){
+                    const payload = db('todos').orderBy('description')
+                    return payload
+                }else{
+                    const payload = db('todos').orderBy('dateadded')
+                    return payload
+                }
+            }else if(query.filter == 'COMPLETE'){
+                if (query.orderBy=='DESCRIPTION'){
+                    const payload = db('todos').where('state', 'COMPLETE').orderBy('description')
+                    return payload
+                }else{
+                    const payload = db('todos').where('state', 'COMPLETE').orderBy('dateadded')
+                    return payload
+                }
+            }else if(query.filter == 'INCOMPLETE'){
+                if (query.orderBy=='DESCRIPTION'){
+                    const payload = db('todos').where('state', 'INCOMPLETE').orderBy('description')
+                    return payload
+                }else{
+                    const payload = db('todos').where('state', 'INCOMPLETE').orderBy('dateadded')
+                    return payload
+                }
+            }
+            
+        },
+        options:{
+            validate: {
+                query: Joi.object({
+                    filter: Joi.string().uppercase().default('ALL'),
+                    orderBy: Joi.string().uppercase().default('DATE_ADDED')
+                })
+            }
         }
     }
 )
+
+app.route({
+        method: 'DELETE',
+        path: '/todos',
+        handler: (request,h) =>{
+            const id = request.query.id
+            const database = db('todos').where({id: id}) 
+            
+
+            database.then(data=>{
+                const flag = data.length > 0 ? true : false 
+                
+                if(flag){
+                   const deleteSQL = db('todos').del().where({id:id}).then()
+                }
+            })
+            
+            //validar e trazer resposta
+
+        
+
+        },
+        options:{
+            validate: {
+                query: Joi.object({
+                    id: Joi.number().required()
+                })
+            }
+        }
+})
 
 process.on('unhandledRejection', (err) => {
     console.log(err)

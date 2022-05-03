@@ -2,8 +2,11 @@
 import Hapi from '@hapi/hapi'
 import Joi from 'joi'
 import db from './db/db.js'
+import  Boom  from '@hapi/boom'
 const app = Hapi.server({ port: 3000, host: 'localhost' })
-
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+const e404 = Boom.notFound('ToDo not Found')
+const e400 = Boom.badRequest()
 
 app.route(
     {
@@ -44,13 +47,14 @@ app.route({
 })
 
 
-//route todos put
+//route todos PUT => FINISHED
 app.route(
     {
         method: ['POST','PUT'],
         path: '/todos',
         handler: (request, h) => {
             const payload = request.payload
+            
 
             db('todos').insert({
                 state: payload.state,
@@ -59,7 +63,10 @@ app.route(
                 console.log(err)
             })
 
-            return payload
+            sleep(3000)
+            const view = db('todos').where({description: payload.description})
+
+            return view
 
         },
         //validation with Joi
@@ -75,8 +82,7 @@ app.route(
 )
 
 
-
-//route todos get
+//route todos GET with filters => FINISHED
 app.route(
     {
         method: 'GET',
@@ -123,24 +129,24 @@ app.route(
     }
 )
 
+//route todos DELETE => FINISHED
 app.route({
         method: 'DELETE',
         path: '/todos',
         handler: (request,h) =>{
             const id = request.query.id
-            const database = db('todos').where({id: id}) 
-            
 
-            database.then(data=>{
-                const flag = data.length > 0 ? true : false 
-                
-                if(flag){
-                   const deleteSQL = db('todos').del().where({id:id}).then()
+            const result = db('todos').where({id: id}).then(data =>{
+                if(data.length === 0){
+                    return e404
+                }else{
+                    db('todos').del().where({id:id}).then()
+                    return{}
                 }
-            })
-            
-            //validar e trazer resposta
+            }) 
 
+           return result
+            
         
 
         },
@@ -151,6 +157,44 @@ app.route({
                 })
             }
         }
+})
+
+//route todos PATCH
+app.route({
+    method:'PATCH',
+    path:'/todos',
+    handler: (request,h) => {
+        const query = request.query
+        const payload = request.payload
+        const database = db('todos').where({id:query.id})
+
+        /*const result = payload.then(data =>{
+           if(database.state === 'COMPLETE'){
+               console.log(1)
+               //return e400
+           }else if((database.status === 'INCOMPLETE') & (payload.length > 0)){
+               console.log(2)
+           }
+            
+        })
+
+        return result*/
+        return 10
+
+
+    },
+    options:{
+        validate:{
+            query: Joi.object({
+                id: Joi.number().required()
+            }),
+            payload: Joi.object({
+                description: Joi.string(),
+                state: Joi.string().valid('COMPLETE').uppercase()
+            })
+            
+        }
+    }
 })
 
 process.on('unhandledRejection', (err) => {

@@ -6,7 +6,7 @@ import  Boom  from '@hapi/boom'
 const app = Hapi.server({ port: 3000, host: 'localhost' })
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 const e404 = Boom.notFound('ToDo not Found')
-const e400 = Boom.badRequest()
+const e400 = Boom.badRequest('Cannot alter a COMPLETE ToDo')
 
 app.route(
     {
@@ -159,7 +159,7 @@ app.route({
         }
 })
 
-//route todos PATCH
+//route todos PATCH => FINISHED
 app.route({
     method:'PATCH',
     path:'/todos',
@@ -168,19 +168,37 @@ app.route({
         const payload = request.payload
         const database = db('todos').where({id:query.id})
 
-        /*const result = payload.then(data =>{
-           if(database.state === 'COMPLETE'){
-               console.log(1)
-               //return e400
-           }else if((database.status === 'INCOMPLETE') & (payload.length > 0)){
-               console.log(2)
-           }
+        
+        
+        const state = database.then((data) =>{
+            const stateMap = [].map.call(data, function(item){
+                return item.state
+            })
+
             
+            if (data.length <= 0) {
+                const result = e404
+                return result
+            } else if (stateMap[0] === 'COMPLETE') {
+                const result = e400
+                return result
+            } else if(payload.state || payload.description) {
+                const result =  db('todos').where({id:query.id}).update({
+                    state: payload.state,
+                    description: payload.description
+                }).then(()=>{
+                   const result = db('todos').where({id:query.id})
+                   return result
+                })
+ 
+                return result
+            }else{
+                return 0
+            }
+
         })
 
-        return result*/
-        return 10
-
+        return state
 
     },
     options:{
